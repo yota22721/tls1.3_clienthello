@@ -25,21 +25,6 @@ typedef uint8_t Random[32];
 
 typedef uint8_t CipherSuite;  /*Cryptgraphic suite selector */
 
-/*textensions
-server_name
-!supported_groups
-status_request
-spplication_layer_protocol_negotiation
-!signature_algorithms
-signed_certificate_timestamp
-!key_share
-psk_key_exchange_modes *
-!supported_versions
-pre_shared_key : must be the last extension in the clienthello
-
-*/
-
-
 typedef struct{
     ProtocolVersion legacy_version[2]; //tls v1.2 : 0x0303 tls v1.3 : 0x0304(default 0x0303)
     Random random;      //32bit random value 
@@ -50,6 +35,14 @@ typedef struct{
 
 }ClientHello;
 
+//basic vector
+typedef struct 
+{
+    uint8_t* data;
+    int size;
+}Vector;
+
+Vector *v;
 
 uint8_t get_random( uint8_t *buf,const int buflen)
 {
@@ -73,30 +66,23 @@ uint8_t get_random( uint8_t *buf,const int buflen)
     return 0;
 }
 
-typedef struct 
-{
-    uint8_t* data;
-    int size;
-}Vector;
-
-Vector *v;
 
 void CharToHex(char origin[],uint8_t dest[]){
     int num;
     int j=0,i=0,k=0;
 
     char hex[] ="0123456789abcdef";
-    char answ[3];
+    char digits[3];
 
     for( i=0; origin[i] !='\0';i++){
     
         j = origin[i] %16;
         num = origin[i] / 16;
        
-        answ[k]=hex[num];
-        answ[++k]=hex[j];
+        digits[k]=hex[num];
+        digits[++k]=hex[j];
 
-        dest[i] = (uint8_t)strtol(answ,(char**)NULL,16) &0xff;
+        dest[i] = (uint8_t)strtol(digits,(char**)NULL,16) &0xff;
         if(k == 1) k= 0;
         
     }
@@ -117,6 +103,7 @@ int append(uint8_t n,Vector *source){
     source->data = tmp;
     source->size = capa;
     source->data[size -1] = n;
+
     return 0;
 
 }
@@ -219,12 +206,7 @@ void addSupportedVersions(Vector *source){
     };
     addTolast(data,sizeof(data),source);
 }
-void addPSKexchangeMode(Vector *source){
-    uint8_t data[] ={
-        0x00,0x2d,0x00,0x02,0x01,0x01
-    };
-    addTolast(data,sizeof(data),source);
-}
+
 void GenerateKey(uint8_t *key){
 }
 void addKeyShare(Vector *source){
@@ -261,13 +243,10 @@ void addKeyShare(Vector *source){
 void addExtension(Vector *source)
 {
     source->size = 0;
-    //addServerName(source);
     addSupportedGroups(source);
     addSignatureAlgorithms(source);
     addSupportedVersions(source);
-    addPSKexchangeMode(source);
     addKeyShare(source);
-    printf("exten : %d\n",source->size);
 
 }
 
@@ -284,7 +263,6 @@ void InitClientHello(ClientHello *data)
         for(int i = 0;i< sizeof(random);i++){ 
             data->random[i] = random[i];
         }
-    
     }
     
     data->legacy_session_id = 0x00;
@@ -324,15 +302,10 @@ void addClientHello(ClientHello *ch,Vector *clienthello,uint8_t exts_size)
 
     //Cipher Suites
     CreateStack(ch->cipher_suites,sizeof(ch->cipher_suites),&stack);
-    for(int i= 0;i<stack.size;i++){
-        printf(" %02x",stack.data[i]);
-    }
-    printf("\n");
-    printf("size cipher : %d\n",(int) sizeof(ch->cipher_suites));
+   
     //Legacy Session ID
     append(ch->legacy_session_id,&stack);
-    append(0x01,&stack);
-    
+    append(0x01,&stack);  
 
     //Client Random
     CreateStack(ch->random,32,&stack);
@@ -342,17 +315,17 @@ void addClientHello(ClientHello *ch,Vector *clienthello,uint8_t exts_size)
  
     //Handshake Header
     append((stack.size + exts_size)&0xff,&stack);
-    uint8_t input[] ={0x00,0x00};
-    addTolast(input,2,&stack);
+    uint8_t handshake_header[] ={0x00,0x00};
+    addTolast(handshake_header,2,&stack);
     append(0x01,&stack);
  
     //Record Header
-    uint8_t in[] ={
+    uint8_t record[] ={
         (stack.size + exts_size)&0xff,0x00,
         0x01,0x03,
         0x16
     };
-    addTolast(in,5,&stack);
+    addTolast(record,5,&stack);
     
     int size = stack.size;
     for(int i = 0;i<size;i++){
@@ -365,7 +338,6 @@ int main(){
     ClientHello ch;
     Vector clienthello;
     Vector extensions;
-    int i;
 
     InitClientHello(&ch);
 
@@ -377,12 +349,6 @@ int main(){
     
     unsigned char *raw;
     raw = (unsigned char*)clienthello.data;
-    for(i = 0;i<clienthello.size;i++){
-        printf("%02x ",raw[i]);
-      
-    }
-    printf("\n");
-    printf("size :%d\n",clienthello.size);
 
     int sock;
     int port = 4043;
@@ -419,7 +385,7 @@ int main(){
         printf("[!]Send error\n");
         return -1;
     }
-    printf("[*]sent buffer \n");
+    printf("[*]sent buffer...\n");
     recv_size = recv(sock,recv_buf,256,0);
     if(recv_size == -1){
         printf("[!]recv error\n");
@@ -434,13 +400,13 @@ int main(){
         return -1;
     }
     printf("server response : ");
-    for(i = 0;i<256;i++){
+    for(int i = 0;i<256;i++){
         printf(" %02x",recv_buf[i]);
     }
     printf("\n");
     
-
     close(sock);
+
     return 0;
 }
 
