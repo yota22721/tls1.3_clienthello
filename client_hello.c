@@ -11,12 +11,6 @@
 #include<netdb.h>
 #include <arpa/inet.h>
 
-/*openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout myPKey.pem \
-    -out myCert.crt \
-    -subj '/CN=US'
-openssl s_server -accept portNum -cert myCert.pem -key myPKey.pem*/
-
 #define DEV_RANDOM "/dev/urandom"
 typedef uint8_t opaque;
 
