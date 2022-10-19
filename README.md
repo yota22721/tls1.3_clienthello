@@ -2,6 +2,9 @@
 Simple implementation of tls.13 ClientHello for learning purposes
 
 This program can only work on Linux
+<br>
+<br>
+note :  Cryptographic  algorithms are not impemented.
 
 Server
 ```
@@ -29,7 +32,9 @@ server response :  16 03 03 00 5b 02 00 00 57 03 03 56 fe b3 ac 38 d5 df d1 4b b
  17 03 03 00 17 bc f8 00 22 5e 21 30 2e 18 54 f6 ed 60 dc .....
 ```
 
-#### reference
+
+
+## reference
 [The Illustrated TLS 1.3 Connection Every byte explained and reproduced](https://tls13.xargs.org/)
 
 [The Transport Layer Security (TLS) Protocol Version 1.3 - RFC 8446 ](https://datatracker.ietf.org/doc/html/rfc8446)
