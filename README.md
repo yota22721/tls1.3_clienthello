@@ -32,7 +32,11 @@ server response :  16 03 03 00 5b 02 00 00 57 03 03 56 fe b3 ac 38 d5 df d1 4b b
  17 03 03 00 17 bc f8 00 22 5e 21 30 2e 18 54 f6 ed 60 dc .....
 ```
 
-
+From server hello ,
+```
+00 2b 00 02 03 04
+``` 
+These 6 bytes prove the connection is tls1.3 !!
 
 ## reference
 [The Illustrated TLS 1.3 Connection Every byte explained and reproduced](https://tls13.xargs.org/)
