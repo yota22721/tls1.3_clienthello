@@ -120,7 +120,7 @@ void CreateStack(uint8_t lst[],uint8_t len,Vector *source)
 
 void addServerName(Vector *source){
   
-    char ServerName[] = "example.ulfheim.net";
+    char ServerName[] = "www.google.com";
     uint8_t length = sizeof(ServerName)/sizeof(ServerName[0])-1;
     uint8_t name_data[length];
     
@@ -202,6 +202,8 @@ void addSupportedVersions(Vector *source){
 }
 
 void GenerateKey(uint8_t *key){
+    //this field will be used for key generation.
+
 }
 void addKeyShare(Vector *source){
     uint8_t generated_key[32] ={
@@ -222,6 +224,7 @@ void addKeyShare(Vector *source){
         0x1c,0x1d,
         0x1e,0x1f,
     };
+
     uint8_t head[10] = {
         0x00,0x33,
         0x00,0x26,
@@ -277,7 +280,6 @@ void InitClientHello(ClientHello *data)
     data->legacy_compression_methods = 0x00;
 
 }
-
 
 
 void addClientHello(ClientHello *ch,Vector *clienthello,uint8_t exts_size)

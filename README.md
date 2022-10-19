@@ -3,10 +3,6 @@ Simple implementation of tls.13 ClientHello for learning purposes
 
 This program can only work on Linux
 
-Client 
-```
-./ch
-```
 Server
 ```
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -15,6 +11,12 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -subj '/CN=JP'
 openssl s_server -accept 4043 -cert myCert.crt -key myPKey.pem
 ```
+
+Client 
+```
+./ch
+```
+
 Client Hello
 ```
 [*]Start connecting...
