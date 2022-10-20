@@ -229,7 +229,7 @@ void addKeyShare(Vector *source){
         0x00,0x33,
         0x00,0x26,
         0x00,0x24,
-        0x00,0x1d,//x25519
+        0x00,0x1d,//x25519 1d
         0x00,0x20
     };
     //GenerateKey(generated_key);
@@ -240,6 +240,7 @@ void addKeyShare(Vector *source){
 void addExtension(Vector *source)
 {
     source->size = 0;
+    addServerName(source);
     addSupportedGroups(source);
     addSignatureAlgorithms(source);
     addSupportedVersions(source);
@@ -334,6 +335,7 @@ int main(){
     ClientHello ch;
     Vector clienthello;
     Vector extensions;
+    
 
     InitClientHello(&ch);
 
@@ -347,32 +349,43 @@ int main(){
     raw = (unsigned char*)clienthello.data;
 
     int sock;
-    int port = 4043;
-    char ip_addr[] = "127.0.0.2";
-    
+
+    char *hostname = "www.google.com";
+    char *service = "https";
+    struct addrinfo hints, *res0,*res;
+    int err;
     int send_size,recv_size;
     unsigned char recv_buf[256];
-    struct sockaddr_in addr;
 
-    sock = socket(AF_INET,SOCK_STREAM,0);
-    if(sock == -1){
-        printf("socket error\n");
-        return -1;
+    memset(&hints,0,sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = PF_UNSPEC;
+
+    if(err = getaddrinfo(hostname,service,&hints,&res0) !=0){
+        printf("eror %d\n",err);
+        return 1;
     }
 
-    memset(&addr,0,sizeof(struct sockaddr_in));
-
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(ip_addr);
-
-    printf("[*]Start connecting...\n");
-    if(connect(sock,(struct sockaddr *)&addr,sizeof(addr)) == -1)
-    {
-        printf("[!]connection error\n");
+    for (res=res0; res!=NULL; res=res->ai_next) {
+        sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+        if (sock < 0) {
+            continue;
+        }
+ 
+        if (connect(sock, res->ai_addr, res->ai_addrlen) != 0) {
         close(sock);
-        return -1;
+        continue;
+        }    
+
+        break;
     }
+
+    if(res == NULL){
+        printf("Failed\n");
+        return 1;
+    }
+    freeaddrinfo(res0);
+
     printf("[*]connection succeeded!\n");
     
     send_size = send(sock,raw,clienthello.size,0);

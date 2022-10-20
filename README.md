@@ -1,5 +1,5 @@
-# tls1.3_clienthello
-Simple implementation of tls.13 ClientHello for learning purposes
+# TLS1.3_ClientHello
+Simple implementation of TLS 1.3 ClientHello for learning purposes
 
 This program can only work on Linux
 <br>
@@ -17,7 +17,7 @@ openssl s_server -accept 4043 -cert myCert.crt -key myPKey.pem
 
 Client 
 ```
-./ch
+./clienthello
 ```
 
 Client Hello
@@ -36,7 +36,16 @@ From server hello ,
 ```
 00 2b 00 02 03 04
 ``` 
-These 6 bytes prove the connection is tls1.3 !!
+These 6 bytes prove the connection is TLS 1.3 !!
+
+## Extra
+
+You'll find the program works on real world by executeing  ``` ./ch```  .
+
+``` ./ch```   send ClientHello to https://www.google.com  
+
+Check the ServerHello details on the [Wireshark](https://www.wireshark.org/)
+ if you'd like.
 
 ## reference
 [The Illustrated TLS 1.3 Connection Every byte explained and reproduced](https://tls13.xargs.org/)
