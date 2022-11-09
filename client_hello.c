@@ -98,6 +98,9 @@ int append(uint8_t n,Vector *source){
     source->size = capa;
     source->data[size -1] = n;
 
+    free(tmp);
+    tmp = NULL;
+
     return 0;
 
 }
@@ -345,6 +348,12 @@ int main(){
     
     unsigned char *raw;
     raw = (unsigned char*)clienthello.data;
+
+    free(clienthello.data);
+    free(extensions.data);
+
+    clienthello.data = NULL;
+    extensions.data = NULL;
 
     int sock;
     int port = 4043;

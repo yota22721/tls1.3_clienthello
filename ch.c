@@ -98,6 +98,9 @@ int append(uint8_t n,Vector *source){
     source->size = capa;
     source->data[size -1] = n;
 
+    free(tmp);
+    tmp = NULL;
+
     return 0;
 
 }
@@ -344,6 +347,12 @@ int main(){
     addClientHello(&ch,&clienthello,(uint8_t)extensions.size&0xff);
     
     addTolast(extensions.data,extensions.size,&clienthello);
+
+    free(clienthello.data);
+    free(extensions.data);
+
+    clienthello.data = NULL;
+    extensions.data = NULL;
     
     unsigned char *raw;
     raw = (unsigned char*)clienthello.data;
