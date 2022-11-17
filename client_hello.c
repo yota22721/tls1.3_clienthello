@@ -98,26 +98,23 @@ int append(uint8_t n,Vector *source){
     source->size = capa;
     source->data[size -1] = n;
 
-    //free(tmp);
-    //tmp = NULL;
 
     return 0;
 
 }
 
-void addTolast(uint8_t lst[],uint8_t len,Vector *source){
+void addTolast(uint8_t lst[],uint8_t len,Vector *source,int is_stack){
 
-    for(int i =0;i<len;i++){
-        append(lst[i],source);
+    if(is_stack == 0){
+        for(int i =0;i<len;i++){
+            append(lst[i],source);
+        }
+    }else{
+        for(int i = 0;i<len;i++){
+        append(lst[len-i-1],source);
+        }
     }
     
-}
-
-void CreateStack(uint8_t lst[],uint8_t len,Vector *source)
-{
-    for(int i = 0;i<len;i++){
-        append(lst[len-i-1],source);
-    }
 }
 
 
@@ -135,8 +132,8 @@ void addServerName(Vector *source){
         0x00,length&0xff
         };
     CharToHex(ServerName,name_data); 
-    addTolast(head,9,source);
-    addTolast(name_data,length,source);   
+    addTolast(head,9,source,0);
+    addTolast(name_data,length,source,0);   
 }
 
 void addSupportedGroups(Vector *source){
@@ -158,8 +155,8 @@ void addSupportedGroups(Vector *source){
         0x00,(size+2)&0xff,
         0x00,size&0xff
     };
-    addTolast(head,sizeof(head),source);
-    addTolast(groups,size,source);
+    addTolast(head,sizeof(head),source,0);
+    addTolast(groups,size,source,0);
 }
 
 void addSignatureAlgorithms(Vector *source){
@@ -189,8 +186,8 @@ void addSignatureAlgorithms(Vector *source){
         0x00,(size+2)&0xff,
         0x00,size&0xff
     };
-    addTolast(head,sizeof(head),source);
-    addTolast(algorithms,size,source);
+    addTolast(head,sizeof(head),source,0);
+    addTolast(algorithms,size,source,0);
 }
 
 
@@ -201,7 +198,7 @@ void addSupportedVersions(Vector *source){
         0x02,
         0x03,0x04
     };
-    addTolast(data,sizeof(data),source);
+    addTolast(data,sizeof(data),source,0);
 }
 
 void GenerateKey(uint8_t *key){
@@ -236,8 +233,8 @@ void addKeyShare(Vector *source){
         0x00,0x20
     };
     //GenerateKey(generated_key);
-    addTolast(head,sizeof(head),source);
-    addTolast(generated_key,32,source);
+    addTolast(head,sizeof(head),source,0);
+    addTolast(generated_key,32,source,0);
 }
 
 void addExtension(Vector *source)
@@ -300,22 +297,22 @@ void addClientHello(ClientHello *ch,Vector *clienthello,uint8_t exts_size)
     append(0x01,&stack);
 
     //Cipher Suites
-    CreateStack(ch->cipher_suites,sizeof(ch->cipher_suites),&stack);
+    addTolast(ch->cipher_suites,sizeof(ch->cipher_suites),&stack,1);
    
     //Legacy Session ID
     append(ch->legacy_session_id,&stack);
     append(0x01,&stack);  
 
     //Client Random
-    CreateStack(ch->random,32,&stack);
+    addTolast(ch->random,32,&stack,1);
 
     //Legacy version
-    addTolast(ch->legacy_version,2,&stack);
+    addTolast(ch->legacy_version,2,&stack,0);
  
     //Handshake Header
     append((stack.size + exts_size)&0xff,&stack);
     uint8_t handshake_header[] ={0x00,0x00};
-    addTolast(handshake_header,2,&stack);
+    addTolast(handshake_header,2,&stack,0);
     append(0x01,&stack);
  
     //Record Header
@@ -324,7 +321,7 @@ void addClientHello(ClientHello *ch,Vector *clienthello,uint8_t exts_size)
         0x01,0x03,
         0x16
     };
-    addTolast(record,5,&stack);
+    addTolast(record,5,&stack,0);
     
     int size = stack.size;
     for(int i = 0;i<size;i++){
@@ -344,7 +341,7 @@ int main(){
 
     addClientHello(&ch,&clienthello,(uint8_t)extensions.size&0xff);
     
-    addTolast(extensions.data,extensions.size,&clienthello);
+    addTolast(extensions.data,extensions.size,&clienthello,0);
     
     unsigned char *raw;
     raw = (unsigned char*)clienthello.data;
