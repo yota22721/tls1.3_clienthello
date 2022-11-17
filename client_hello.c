@@ -98,8 +98,8 @@ int append(uint8_t n,Vector *source){
     source->size = capa;
     source->data[size -1] = n;
 
-    free(tmp);
-    tmp = NULL;
+    //free(tmp);
+    //tmp = NULL;
 
     return 0;
 
@@ -349,11 +349,53 @@ int main(){
     unsigned char *raw;
     raw = (unsigned char*)clienthello.data;
 
-    free(clienthello.data);
-    free(extensions.data);
-
     clienthello.data = NULL;
     extensions.data = NULL;
+
+#ifdef OUTPUT_CH
+
+    int sock;
+    char *hostname = "www.google.com";
+    char *service = "https";
+    struct addrinfo hints, *res0,*res;
+    int err;
+    int send_size,recv_size;
+    unsigned char recv_buf[256];
+
+    memset(&hints,0,sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = PF_UNSPEC;
+
+    if(err = getaddrinfo(hostname,service,&hints,&res0) !=0){
+        printf("error %d\n",err);
+        return 1;
+    }
+
+    for (res=res0; res!=NULL; res=res->ai_next) {
+        sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+        if (sock < 0) {
+            continue;
+        }
+ 
+        if (connect(sock, res->ai_addr, res->ai_addrlen) != 0) {
+        close(sock);
+        continue;
+        }    
+
+        break;
+    }
+
+    if(res == NULL){
+        printf("Failed\n");
+        return 1;
+    }
+    freeaddrinfo(res0);
+
+    printf("[*]connection succeeded!\n");
+
+#else
+
+
 
     int sock;
     int port = 4043;
@@ -383,6 +425,7 @@ int main(){
         return -1;
     }
     printf("[*]connection succeeded!\n");
+#endif
     
     send_size = send(sock,raw,clienthello.size,0);
     

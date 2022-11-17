@@ -98,8 +98,8 @@ int append(uint8_t n,Vector *source){
     source->size = capa;
     source->data[size -1] = n;
 
-    free(tmp);
-    tmp = NULL;
+    //free(tmp);
+    //tmp = NULL;
 
     return 0;
 
@@ -358,7 +358,6 @@ int main(){
     raw = (unsigned char*)clienthello.data;
 
     int sock;
-
     char *hostname = "www.google.com";
     char *service = "https";
     struct addrinfo hints, *res0,*res;
@@ -396,6 +395,7 @@ int main(){
     freeaddrinfo(res0);
 
     printf("[*]connection succeeded!\n");
+
     
     send_size = send(sock,raw,clienthello.size,0);
     
