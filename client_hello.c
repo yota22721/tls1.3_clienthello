@@ -21,7 +21,7 @@ typedef uint8_t CipherSuite;  /*Cryptgraphic suite selector */
 
 typedef struct{
     ProtocolVersion legacy_version[2]; //tls v1.2 : 0x0303 tls v1.3 : 0x0304(default 0x0303)
-    Random random;      //32bit random value 
+    Random random;      //32bit random value
     opaque legacy_session_id;   // pre-tlsv1.3 : <0...32> tlsv1.3 : 0x00
     CipherSuite cipher_suites[14];  //<2..2^16-2>
     opaque legacy_compression_methods;  //prior to tlsv1.3 : <1..2^8-1>  tls v1.3 : 0x00
@@ -30,7 +30,7 @@ typedef struct{
 }ClientHello;
 
 //basic vector
-typedef struct 
+typedef struct
 {
     uint8_t* data;
     int size;
@@ -56,7 +56,7 @@ uint8_t get_random( uint8_t *buf,const int buflen)
         fprintf(stderr,"Error can not read(%d != %d)",r,32);
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -69,16 +69,16 @@ void CharToHex(char origin[],uint8_t dest[]){
     char digits[3];
 
     for( i=0; origin[i] !='\0';i++){
-    
+
         j = origin[i] %16;
         num = origin[i] / 16;
-       
+
         digits[k]=hex[num];
         digits[++k]=hex[j];
 
         dest[i] = (uint8_t)strtol(digits,(char**)NULL,16) &0xff;
         if(k == 1) k= 0;
-        
+
     }
 
 }
@@ -114,16 +114,16 @@ void addTolast(uint8_t lst[],uint8_t len,Vector *source,int is_stack){
         append(lst[len-i-1],source);
         }
     }
-    
+
 }
 
 
 void addServerName(Vector *source){
-  
+
     char ServerName[] = "www.google.com";
     uint8_t length = sizeof(ServerName)/sizeof(ServerName[0])-1;
     uint8_t name_data[length];
-    
+
     uint8_t head[9] = {
         0x00,0x00,
         0x00,(length + 5)&0xff,
@@ -131,9 +131,9 @@ void addServerName(Vector *source){
         0x00,
         0x00,length&0xff
         };
-    CharToHex(ServerName,name_data); 
+    CharToHex(ServerName,name_data);
     addTolast(head,9,source,0);
-    addTolast(name_data,length,source,0);   
+    addTolast(name_data,length,source,0);
 }
 
 void addSupportedGroups(Vector *source){
@@ -142,7 +142,7 @@ void addSupportedGroups(Vector *source){
             0x00, 0x17,//secp256r1
             0x00, 0x1e,//x448
             0x00, 0x19,//secp521r1
-            0x00, 0x18,//secp384r1 
+            0x00, 0x18,//secp384r1
             0x01, 0x00,//ffdhe2048
             0x01, 0x01,//ffdhe3072
             0x01, 0x02,//ffdhe4096
@@ -257,11 +257,11 @@ void InitClientHello(ClientHello *data)
     data->legacy_version[1]= 0x03;
 
     if(get_random(random,32) == 0){
-        for(int i = 0;i< sizeof(random);i++){ 
+        for(int i = 0;i< sizeof(random);i++){
             data->random[i] = random[i];
         }
     }
-    
+
     data->legacy_session_id = 0x00;
 
     uint8_t suites[]= {
@@ -269,8 +269,8 @@ void InitClientHello(ClientHello *data)
         0x13,0x02,//TLS_AES_256_GCM_SHA384
         0x13,0x03,//TLS_CHACHA20_POLY1305_SHA256
         0x13,0x01,//TLS_AES_128_GCM_SHA256
-        0x13,0x04,//TLS_AES_128_CCM_SHA256 
-        0x13,0x05,//TLS_AES_128_COM_SHA256  
+        0x13,0x04,//TLS_AES_128_CCM_SHA256
+        0x13,0x05,//TLS_AES_128_COM_SHA256
         0x00,0xff//TLS_EMPTY_RENEGOTIATION_INFO_SCSV
         };
     for(i =0; i< sizeof(suites);i++){
@@ -298,23 +298,23 @@ void addClientHello(ClientHello *ch,Vector *clienthello,uint8_t exts_size)
 
     //Cipher Suites
     addTolast(ch->cipher_suites,sizeof(ch->cipher_suites),&stack,1);
-   
+
     //Legacy Session ID
     append(ch->legacy_session_id,&stack);
-    append(0x01,&stack);  
+    append(0x01,&stack);
 
     //Client Random
     addTolast(ch->random,32,&stack,1);
 
     //Legacy version
     addTolast(ch->legacy_version,2,&stack,0);
- 
+
     //Handshake Header
     append((stack.size + exts_size)&0xff,&stack);
     uint8_t handshake_header[] ={0x00,0x00};
     addTolast(handshake_header,2,&stack,0);
     append(0x01,&stack);
- 
+
     //Record Header
     uint8_t record[] ={
         (stack.size + exts_size)&0xff,0x00,
@@ -322,7 +322,7 @@ void addClientHello(ClientHello *ch,Vector *clienthello,uint8_t exts_size)
         0x16
     };
     addTolast(record,5,&stack,0);
-    
+
     int size = stack.size;
     for(int i = 0;i<size;i++){
         append(stack.data[size-1-i],clienthello);
@@ -340,9 +340,9 @@ int main(){
     addExtension(&extensions);
 
     addClientHello(&ch,&clienthello,(uint8_t)extensions.size&0xff);
-    
+
     addTolast(extensions.data,extensions.size,&clienthello,0);
-    
+
     unsigned char *raw;
     raw = (unsigned char*)clienthello.data;
 
@@ -351,59 +351,50 @@ int main(){
 
 #ifdef OUTPUT_CH
 
-    int sock;
+    int sockfd;
     char *hostname = "www.google.com";
     char *service = "https";
-    struct addrinfo hints, *res0,*res;
+    struct addrinfo hints, *res;
     int err;
     int send_size,recv_size;
     unsigned char recv_buf[256];
 
     memset(&hints,0,sizeof(hints));
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_family = PF_UNSPEC;
 
-    if(err = getaddrinfo(hostname,service,&hints,&res0) !=0){
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if(err = getaddrinfo(hostname, service,&hints, &res) !=0){
         printf("error %d\n",err);
         return 1;
     }
 
-    for (res=res0; res!=NULL; res=res->ai_next) {
-        sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-        if (sock < 0) {
-            continue;
-        }
- 
-        if (connect(sock, res->ai_addr, res->ai_addrlen) != 0) {
-        close(sock);
-        continue;
-        }    
-
-        break;
-    }
-
-    if(res == NULL){
-        printf("Failed\n");
+    if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+        fprintf(stderr,"ERROR: failed to create the socket\n");
         return 1;
     }
-    freeaddrinfo(res0);
+
+    if((connect(sockfd, res->ai_addr, res->ai_addrlen)) == -1){
+        fprintf(stderr, "ERROR: failed to connect\n");
+        return 1;
+    }
+
+    freeaddrinfo(res);
 
     printf("[*]connection succeeded!\n");
 
 #else
 
-
-
-    int sock;
+    int sockfd;
     int port = 4043;
     char ip_addr[] = "127.0.0.2";
-    
+
     int send_size,recv_size;
     unsigned char recv_buf[256];
     struct sockaddr_in addr;
 
-    sock = socket(AF_INET,SOCK_STREAM,0);
-    if(sock == -1){
+    sockfd = socket(AF_INET,SOCK_STREAM,0);
+    if(sockfd == -1){
         printf("socket error\n");
         return -1;
     }
@@ -415,23 +406,23 @@ int main(){
     addr.sin_addr.s_addr = inet_addr(ip_addr);
 
     printf("[*]Start connecting...\n");
-    if(connect(sock,(struct sockaddr *)&addr,sizeof(addr)) == -1)
+    if(connect(sockfd,(struct sockaddr *)&addr,sizeof(addr)) == -1)
     {
         printf("[!]connection error\n");
-        close(sock);
+        close(sockfd);
         return -1;
     }
     printf("[*]connection succeeded!\n");
 #endif
-    
-    send_size = send(sock,raw,clienthello.size,0);
-    
+
+    send_size = send(sockfd,raw,clienthello.size,0);
+
     if(send_size == -1){
         printf("[!]Send error\n");
         return -1;
     }
     printf("[*]sent buffer...\n");
-    recv_size = recv(sock,recv_buf,256,0);
+    recv_size = recv(sockfd,recv_buf,256,0);
     if(recv_size == -1){
         printf("[!]recv error\n");
         return -1;
@@ -449,8 +440,8 @@ int main(){
         printf(" %02x",recv_buf[i]);
     }
     printf("\n");
-    
-    close(sock);
+
+    close(sockfd);
 
     return 0;
 }
